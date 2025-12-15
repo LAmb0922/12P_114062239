@@ -1,0 +1,163 @@
+{
+  "map": [
+    {
+      "path": "map.tmx",
+      "teleport": [
+        {
+          "x": 24,
+          "y": 23,
+          "destination": "gym.tmx"
+        },
+        {
+          "x": 53.5,
+          "y": 14,
+          "destination": "riddle.tmx"
+        }
+      ],
+      "player": {
+        "x": 24.0,
+        "y": 25.0
+      },
+      "enemy_trainers": [
+        {
+          "x": 24.0,
+          "y": 29.0,
+          "classification": "stationary",
+          "facing": "DOWN",
+          "max_tiles": 2
+        },
+        {
+          "x": 50.0,
+          "y": 16.0,
+          "classification": "stationary",
+          "facing": "RIGHT",
+          "max_tiles": 2
+        },
+        {
+          "x": 31.0,
+          "y": 31.0,
+          "classification": "stationary",
+          "facing": "UP",
+          "max_tiles": 2
+        }
+      ],
+      "shop": [
+        {
+          "x": 11.0,
+          "y": 23.0,
+          "classification": "stationary",
+          "facing": "DOWN",
+          "max_tiles": 2
+        }
+      ]
+    },
+    {
+      "path": "gym.tmx",
+      "teleport": [
+        {
+          "x": 11,
+          "y": 14,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 12,
+          "y": 14,
+          "destination": "map.tmx"
+        },
+        {
+          "x": 13,
+          "y": 14,
+          "destination": "map.tmx"
+        }
+      ],
+      "player": {
+        "x": 12.0,
+        "y": 12.0
+      },
+      "enemy_trainers": [],
+      "shop": []
+    },
+    {
+      "path": "riddle.tmx",
+      "teleport": [
+        {
+          "x": 29,
+          "y": 20,
+          "destination": "map.tmx"
+        }
+        
+        
+      ],
+      "player": {
+        "x": 29.0,
+        "y": 18.0
+      },
+      "enemy_trainers": [],
+      "shop": []
+    }
+  ],
+  "current_map": "map.tmx",
+  "player": {
+    "x": 24.15625,
+    "y": 30.4375
+  },
+  "bag": {
+    "monsters": [
+      {
+        "name": "grass lion",
+        "hp": 85,
+        "max_hp": 100,
+        "level": 25,
+        "sprite_path": "menu_sprites/menusprite1.png"
+      },
+      {
+        "name": "ice deer",
+        "hp": 150,
+        "max_hp": 200,
+        "level": 36,
+        "sprite_path": "menu_sprites/menusprite2.png"
+      },
+      {
+        "name": "fire bird",
+        "hp": 120,
+        "max_hp": 180,
+        "level": 32,
+        "sprite_path": "menu_sprites/menusprite3.png"
+      },
+      {
+        "name": "ground rat",
+        "hp": 90,
+        "max_hp": 160,
+        "level": 30,
+        "sprite_path": "menu_sprites/menusprite4.png"
+      }
+    ],
+    "items": [
+      {
+        "name": "Heal Potion",
+        "count": 6,
+        "sprite_path": "ingame_ui/potion.png"
+      },
+      {
+        "name": "Strength Potion",
+        "count": 7,
+        "sprite_path": "ingame_ui/potion.png"
+      },
+      {
+        "name": "Defense Potion",
+        "count": 0,
+        "sprite_path": "ingame_ui/potion.png"
+      },
+      {
+        "name": "Coins",
+        "count": 5,
+        "sprite_path": "ingame_ui/coin.png"
+      },
+      {
+        "name": "Pokeball",
+        "count": 17,
+        "sprite_path": "ingame_ui/ball.png"
+      }
+    ]
+  }
+}
