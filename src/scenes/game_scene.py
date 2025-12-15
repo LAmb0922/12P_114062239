@@ -13,7 +13,8 @@ from src.interface.components.component import Slider ,Switch
 from src.utils.definition import Monster
 from src.entities.shop import Shop
 from src.entities.entity import Entity_one 
-
+from src.maps.map import Map
+from collections import deque
 from src.interface.components import Button
 class GameScene(Scene):
     game_manager: GameManager
@@ -29,12 +30,14 @@ class GameScene(Scene):
         # Game Manager
         self.game_manager = GameManager.load("saves/game0.json")
         self.shop = list(self.game_manager.shop.values())[0][0]
-        
+        self.navigation_path = []
+        self.navigating=False
         if self.game_manager is None:
             Logger.error("Failed to load game manager")
             exit(1)
         self.mask=pg.Surface((GameSettings.SCREEN_WIDTH,GameSettings.SCREEN_HEIGHT),pg.SRCALPHA)
         self.mask.fill((0,0,0,180))
+        
         # Online Manager
         if GameSettings.IS_ONLINE:
             self.online_manager = OnlineManager()
@@ -65,8 +68,11 @@ class GameScene(Scene):
             self.leading_system_click)
         self.lead_to_riddle_end_button=Button(
             "UI/button_play.png","UI/button_play_hover.png",
-            px,py,50,50,#something
+            px,py,50,50,self.go_to_end
         )
+        self.lead_to_gym_button=Button(
+            "UI/button_play.png","UI/button_play_hover.png",
+            px-100,py-100,50,50,self.go_to_gym)
         self.slider_bar=Slider(
             "UI/raw/UI_Flat_ToggleOff02a.png","UI/raw/UI_Flat_ToggleOn01a.png",
             px+200,px-350,px-350+GameSettings.AUDIO_VOLUME*(550), py-300,50,20,
@@ -115,6 +121,64 @@ class GameScene(Scene):
             px +150, 230, 50, 50,self.sell_ball)
         for map in self.game_manager.maps.values():
             map.create_minimap(240, 135)
+    def go_to_gym(self):
+        self.leading_system_clicked=False
+        if self.navigating:
+            self.navigating=False
+        else:
+            self.navigating=True
+        player_tile = (
+        self.game_manager.player.position.x // GameSettings.TILE_SIZE,
+        self.game_manager.player.position.y // GameSettings.TILE_SIZE)
+        self.navigation_path = self.bfs_path(player_tile, (24,27),self.game_manager.current_map)
+    def go_to_end(self):
+        self.leading_system_clicked=False
+        if self.navigating:
+            self.navigating=False
+        else:
+            self.navigating=True
+        player_tile = (
+        self.game_manager.player.position.x // GameSettings.TILE_SIZE,
+        self.game_manager.player.position.y // GameSettings.TILE_SIZE)
+        self.navigation_path = self.bfs_path(player_tile, (2,6),self.game_manager.current_map)
+    def get_walkable_road(self,x, y, game_map:Map):
+        neighbors = []
+        directions = [(0,1), (1,0), (0,-1), (-1,0)]  # down, right, up, left
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < game_map.tmxdata.width and 0 <= ny <  game_map.tmxdata.height:
+                rect = pg.Rect(nx*GameSettings.TILE_SIZE,ny*GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE)
+                if not game_map.check_collision(rect):  # implement is_blocked for your map
+                    neighbors.append((nx, ny))
+        return neighbors
+    
+
+    def bfs_path(self,start, goal, game_map):
+        queue = deque([start])
+        visited = set()
+        visited.add(start)
+        parent = {start: None}
+
+        while queue:
+            current = queue.popleft()
+            if current == goal:
+                break
+            neighbors= self.get_walkable_road(current[0], current[1], game_map)
+            for neighbor in neighbors:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    parent[neighbor] = current
+                    queue.append(neighbor)
+    
+    # Reconstruct path
+        path = []
+        current = goal
+        while current and current in parent:
+            path.append(current)
+            current = parent[current]
+        path.reverse()
+        return path
+
     def load(self):
         tmp=self.game_manager.load("./saves/game0.json")
         self.game_manager=tmp
@@ -164,6 +228,17 @@ class GameScene(Scene):
             self.leading_system_clicked=1
         else:
             self.leading_system_clicked=0 
+    def draw_triangle_prepare(self,x, y, direction):
+        size=12
+        if direction == "up":
+            points = [(x,y-1.5*size), (x-size, y+size), (x+size,y+size)]
+        elif direction == "down":
+            points = [(x,y+1.5*size), (x-size,y-size), (x+size,y-size)]
+        elif direction == "left":
+            points = [(x-1.5*size,y), (x+size,y-size), (x+size,y+size)]
+        elif direction == "right":
+            points = [(x+1.5*size,y), (x-size,y-size), (x-size,y+size)]
+        return points
     @override
     def enter(self) -> None:
         sound_manager.play_bgm("RBY 103 Pallet Town.ogg")
@@ -176,7 +251,7 @@ class GameScene(Scene):
         if self.online_manager:
             self.online_manager.exit()
         self.game_manager.save("./saves/game0.json")
-
+        
     @override
     def update(self, dt: float):
         # Check if there is assigned next scene
@@ -206,8 +281,8 @@ class GameScene(Scene):
             _ = self.online_manager.update(
                 self.game_manager.player.position.x, 
                 self.game_manager.player.position.y,
-                self.game_manager.current_map.path_name
-                
+                self.game_manager.current_map.path_name,
+                self.game_manager.player.animation.moving
             )
         #print(self.game_manager.player.direction.name)
         self.overlay_button.update(dt)
@@ -227,8 +302,11 @@ class GameScene(Scene):
         self.sell_potion_button.update(dt)
         self.check_bush() 
         self.leading_system_button.update(dt)
+        self.lead_to_riddle_end_button.update(dt)
+        self.lead_to_gym_button.update(dt)
     @override
     def draw(self, screen: pg.Surface):
+        #print(self.game_manager.player.direction.name)
         #print(self.game_manager.player.animation.animations.keys())
         if self.game_manager.player:
             '''
@@ -289,7 +367,8 @@ class GameScene(Scene):
             self.game_manager.bag.draw(screen)
         elif self.leading_system_clicked:   ### make the navigate system
             self.board_button.draw(screen)
-        
+            self.lead_to_riddle_end_button.draw(screen)
+            self.lead_to_gym_button.draw(screen)
         self.overlay_button.draw(screen)
         self.backpack_button.draw(screen)
         self.leading_system_button.draw(screen)
@@ -328,3 +407,34 @@ class GameScene(Scene):
                     self.sprite_online.position=pos
                     self.sprite_online.animation.update_pos(pos)
                     self.sprite_online.draw(screen,None)
+        if self.navigating:
+            if len(self.navigation_path)==0:
+                self.navigating=False
+            for tile in self.navigation_path:
+                px = tile[0]*GameSettings.TILE_SIZE+GameSettings.TILE_SIZE/2
+                py = tile[1]*GameSettings.TILE_SIZE+GameSettings.TILE_SIZE/2
+                if abs(px - self.game_manager.player.position.x) < GameSettings.TILE_SIZE and abs(py - self.game_manager.player.position.y) < GameSettings.TILE_SIZE:
+                        self.navigation_path.remove(tile)
+                        print("remove")
+                        break
+            for tile in self.navigation_path:
+            
+                px = tile[0]*GameSettings.TILE_SIZE+GameSettings.TILE_SIZE/2
+                py = tile[1]*GameSettings.TILE_SIZE+GameSettings.TILE_SIZE/2
+                
+                
+                walk=(0,0)
+                if self.navigation_path.index(tile)+1<len(self.navigation_path):
+                    walk=(self.navigation_path[self.navigation_path.index(tile)+1][0]-tile[0],self.navigation_path[self.navigation_path.index(tile)+1][1]-tile[1])
+                if walk[0]>0:
+                    d="right"
+                elif walk[1]>0:
+                    d="down"
+                elif walk[0]<0:
+                    d="left"
+                else:
+                    d="up"
+                points=self.draw_triangle_prepare(px-camera.x, py-camera.y,d)
+                pg.draw.polygon(screen,(255,0,0),points)
+                
+                #pg.draw.circle(screen, (255, 0, 0), (px - camera.x, py - camera.y), 5)

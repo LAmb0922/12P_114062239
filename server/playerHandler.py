@@ -21,16 +21,16 @@ class Player:
     y: float
     map: str
     last_update: float
-    
+    moving:bool
     # HINT: This part might be helpful for direction change
     # Maybe you can add other parameters? 
-    def update(self, x: float, y: float, map: str) -> None:
+    def update(self, x: float, y: float, map: str,direction,moving: bool) -> None:
         if x != self.x or y != self.y or map != self.map:
             self.last_update = time.monotonic()
         self.x = x
         self.y = y
         self.map = map
-        
+        self.moving=moving
     def is_inactive(self) -> bool:
         now = time.monotonic()
         return (now - self.last_update) >= TIMEOUT_TIME
@@ -84,7 +84,7 @@ class PlayerHandler:
             self._next_id += 1
             # HINT: This part might be helpful for direction change
             # Maybe you can add other parameters? 
-            self.players[pid] = Player(pid, 0.0, 0.0, "", time.monotonic())
+            self.players[pid] = Player(pid, 0.0, 0.0, "", time.monotonic(),False)
             return pid
 
     def unregister(self, pid: int) -> bool:
@@ -95,7 +95,7 @@ class PlayerHandler:
                 return True
             return False
 
-    def update(self, pid: int, x: float, y: float, map_name: str) -> bool:
+    def update(self, pid: int, x: float, y: float, map_name: str,moving) -> bool:
         with self._lock:
             p = self.players.get(pid)
             if not p:
@@ -103,7 +103,7 @@ class PlayerHandler:
             else:
                 # HINT: This part might be helpful for direction change
                 # Maybe you can add other parameters? 
-                p.update(float(x), float(y), str(map_name))
+                p.update(float(x), float(y), str(map_name),moving)
                 return True
 
     def list_players(self) -> dict:
@@ -116,7 +116,8 @@ class PlayerHandler:
                     "id": p.id,
                     "x": p.x,
                     "y": p.y,
-                    "map": p.map
+                    "map": p.map,
                     
+                    "moving":p.moving
                 }
             return player_list

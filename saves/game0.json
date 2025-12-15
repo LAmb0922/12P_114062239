@@ -20,7 +20,7 @@
       },
       "enemy_trainers": [
         {
-          "x": 24.0,
+          "x": 28.0,
           "y": 29.0,
           "classification": "stationary",
           "facing": "DOWN",
@@ -34,7 +34,7 @@
           "max_tiles": 2
         },
         {
-          "x": 31.0,
+          "x": 36.0,
           "y": 31.0,
           "classification": "stationary",
           "facing": "UP",
