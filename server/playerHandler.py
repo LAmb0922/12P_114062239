@@ -24,7 +24,7 @@ class Player:
     moving:bool
     # HINT: This part might be helpful for direction change
     # Maybe you can add other parameters? 
-    def update(self, x: float, y: float, map: str,direction,moving: bool) -> None:
+    def update(self, x: float, y: float, map: str,moving: bool) -> None:
         if x != self.x or y != self.y or map != self.map:
             self.last_update = time.monotonic()
         self.x = x

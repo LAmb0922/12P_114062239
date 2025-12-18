@@ -69,7 +69,6 @@ class OnlineManager:
         """Get list of players"""
         with self._lock:
             return list(self.list_players)
-
     def update(self, x: float, y: float, map_name: str,moving:bool) -> bool:
         """Queue position update (no dir / moving)."""
         if self.player_id == -1:
@@ -217,6 +216,7 @@ class OnlineManager:
 
             elif msg_type == "error":
                 Logger.warning(f"Server error: {data.get('message', 'unknown')}")
+                
 
         except json.JSONDecodeError as e:
             Logger.warning(f"Failed to parse WebSocket message: {e}")

@@ -39,6 +39,8 @@ class Player(Entity_one):
             self.animation.switch("down")
             self.direction="down"
             self.animation.walk()
+        if not(input_manager.key_down(pg.K_DOWN) or input_manager.key_down(pg.K_s) or input_manager.key_down(pg.K_UP) or input_manager.key_down(pg.K_w) or input_manager.key_down(pg.K_RIGHT) or input_manager.key_down(pg.K_d) or input_manager.key_down(pg.K_LEFT) or input_manager.key_down(pg.K_a)):
+            self.animation.moving=False
         dis.x *= dt
         dis.y *= dt
         if dis.x != 0 and dis.y != 0:

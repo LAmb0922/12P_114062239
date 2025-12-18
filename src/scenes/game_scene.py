@@ -16,6 +16,7 @@ from src.entities.entity import Entity_one
 from src.maps.map import Map
 from collections import deque
 from src.interface.components import Button
+# from src.interface.components.chat_overlay import ChatOverlay
 class GameScene(Scene):
     game_manager: GameManager
     online_manager: OnlineManager | None
@@ -42,6 +43,10 @@ class GameScene(Scene):
         if GameSettings.IS_ONLINE:
             self.online_manager = OnlineManager()
             self.online_manager.start()
+            # self.chat_overlay = ChatOverlay(
+            #     send_callback=..., <- send chat method
+            #     get_messages=..., <- get chat messages method
+            # )
         else:
             self.online_manager = None
         self.sprite_online = Entity_one(self.game_manager.player.position.x,self.game_manager.player.position.y,self.game_manager)
@@ -68,11 +73,15 @@ class GameScene(Scene):
             self.leading_system_click)
         self.lead_to_riddle_end_button=Button(
             "UI/button_play.png","UI/button_play_hover.png",
-            px,py,50,50,self.go_to_end
+            px-400,py-400,50,50,self.go_to_end
+        )
+        self.lead_to_riddle_start_button=Button(
+            "UI/button_play.png","UI/button_play_hover.png",
+            px-400,py-300,50,50,self.go_to_start
         )
         self.lead_to_gym_button=Button(
             "UI/button_play.png","UI/button_play_hover.png",
-            px-100,py-100,50,50,self.go_to_gym)
+            px-400,py-200,50,50,self.go_to_gym)
         self.slider_bar=Slider(
             "UI/raw/UI_Flat_ToggleOff02a.png","UI/raw/UI_Flat_ToggleOn01a.png",
             px+200,px-350,px-350+GameSettings.AUDIO_VOLUME*(550), py-300,50,20,
@@ -121,6 +130,16 @@ class GameScene(Scene):
             px +150, 230, 50, 50,self.sell_ball)
         for map in self.game_manager.maps.values():
             map.create_minimap(240, 135)
+    def go_to_start(self):
+        self.leading_system_clicked=False
+        if self.navigating:
+            self.navigating=False
+        else:
+            self.navigating=True
+        player_tile = (
+        self.game_manager.player.position.x // GameSettings.TILE_SIZE,
+        self.game_manager.player.position.y // GameSettings.TILE_SIZE)
+        self.navigation_path = self.bfs_path(player_tile,(29,18),self.game_manager.current_map)
     def go_to_gym(self):
         self.leading_system_clicked=False
         if self.navigating:
@@ -130,7 +149,7 @@ class GameScene(Scene):
         player_tile = (
         self.game_manager.player.position.x // GameSettings.TILE_SIZE,
         self.game_manager.player.position.y // GameSettings.TILE_SIZE)
-        self.navigation_path = self.bfs_path(player_tile, (24,27),self.game_manager.current_map)
+        self.navigation_path = self.bfs_path(player_tile,(24,25),self.game_manager.current_map)
     def go_to_end(self):
         self.leading_system_clicked=False
         if self.navigating:
@@ -140,7 +159,7 @@ class GameScene(Scene):
         player_tile = (
         self.game_manager.player.position.x // GameSettings.TILE_SIZE,
         self.game_manager.player.position.y // GameSettings.TILE_SIZE)
-        self.navigation_path = self.bfs_path(player_tile, (2,6),self.game_manager.current_map)
+        self.navigation_path = self.bfs_path(player_tile,(2,6),self.game_manager.current_map)
     def get_walkable_road(self,x, y, game_map:Map):
         neighbors = []
         directions = [(0,1), (1,0), (0,-1), (-1,0)]  # down, right, up, left
@@ -158,7 +177,6 @@ class GameScene(Scene):
         visited = set()
         visited.add(start)
         parent = {start: None}
-
         while queue:
             current = queue.popleft()
             if current == goal:
@@ -169,8 +187,6 @@ class GameScene(Scene):
                     visited.add(neighbor)
                     parent[neighbor] = current
                     queue.append(neighbor)
-    
-    # Reconstruct path
         path = []
         current = goal
         while current and current in parent:
@@ -228,16 +244,16 @@ class GameScene(Scene):
             self.leading_system_clicked=1
         else:
             self.leading_system_clicked=0 
-    def draw_triangle_prepare(self,x, y, direction):
+    def draw_triangle_prepare(self,x, y,direction: str):
         size=12
         if direction == "up":
-            points = [(x,y-1.5*size), (x-size, y+size), (x+size,y+size)]
+            points = [(x,y-1.5*size),(x-size, y+size),(x+size,y+size)]
         elif direction == "down":
-            points = [(x,y+1.5*size), (x-size,y-size), (x+size,y-size)]
+            points = [(x,y+1.5*size),(x-size,y-size),(x+size,y-size)]
         elif direction == "left":
-            points = [(x-1.5*size,y), (x+size,y-size), (x+size,y+size)]
+            points = [(x-1.5*size,y),(x+size,y-size),(x+size,y+size)]
         elif direction == "right":
-            points = [(x+1.5*size,y), (x-size,y-size), (x-size,y+size)]
+            points = [(x+1.5*size,y),(x-size,y-size),(x-size,y+size)]
         return points
     @override
     def enter(self) -> None:
@@ -284,6 +300,7 @@ class GameScene(Scene):
                 self.game_manager.current_map.path_name,
                 self.game_manager.player.animation.moving
             )
+        #print(self.game_manager.player.animation.moving)
         #print(self.game_manager.player.direction.name)
         self.overlay_button.update(dt)
         self.save_button.update(dt)
@@ -304,10 +321,38 @@ class GameScene(Scene):
         self.leading_system_button.update(dt)
         self.lead_to_riddle_end_button.update(dt)
         self.lead_to_gym_button.update(dt)
+        self.lead_to_riddle_start_button.update(dt)
+        """
+        TODO: UPDATE CHAT OVERLAY:
+
+        # if self._chat_overlay:
+        #     if _____.key_pressed(...):
+        #         self._chat_overlay.____
+        #     self._chat_overlay.update(____)
+        # Update chat bubbles from recent messages
+
+        # This part's for the chatting feature, we've made it for you.
+        # if self.online_manager:
+        #     try:
+        #         msgs = self.online_manager.get_recent_chat(50)
+        #         max_id = self._last_chat_id_seen
+        #         now = time.monotonic()
+        #         for m in msgs:
+        #             mid = int(m.get("id", 0))
+        #             if mid <= self._last_chat_id_seen:
+        #                 continue
+        #             sender = int(m.get("from", -1))
+        #             text = str(m.get("text", ""))
+        #             if sender >= 0 and text:
+        #                 self._chat_bubbles[sender] = (text, now + 5.0)
+        #             if mid > max_id:
+        #                 max_id = mid
+        #         self._last_chat_id_seen = max_id
+        #     except Exception:
+        #         pass
+        """
     @override
     def draw(self, screen: pg.Surface):
-        #print(self.game_manager.player.direction.name)
-        #print(self.game_manager.player.animation.animations.keys())
         if self.game_manager.player:
             '''
             [TODO HACKATHON 3]
@@ -345,7 +390,8 @@ class GameScene(Scene):
         px = int(self.game_manager.player.position.x/ map_w * 240)  +5.5
         py = int(self.game_manager.player.position.y/ map_h * 135) +5.5
         pg.draw.circle(screen, (0, 0, 0), (px, py), 3)
-        
+        # if self._chat_overlay:
+        #     self._chat_overlay.draw(screen)
         if self.setting_overlay_clicked:
             font = pg.font.Font("assets/fonts/Minecraft.ttf", 24)
             text_v=font.render(f"Volume", True, (255,255,255))
@@ -366,9 +412,17 @@ class GameScene(Scene):
             self.board_button.draw(screen)
             self.game_manager.bag.draw(screen)
         elif self.leading_system_clicked:   ### make the navigate system
+            font = pg.font.Font("assets/fonts/Minecraft.ttf", 24)
             self.board_button.draw(screen)
             self.lead_to_riddle_end_button.draw(screen)
             self.lead_to_gym_button.draw(screen)
+            self.lead_to_riddle_start_button.draw(screen)
+            text_g=font.render(f"If you want some exercise.",True,(255,255,255))
+            text_s=font.render(f"Just in case you forget the way to go home.",True,(255,255,255))
+            text_e=font.render(f"Why not make some effort first?",True,(255,255,255))
+            _=screen.blit(text_g,(300,350))
+            _=screen.blit(text_e,(300,150))
+            _=screen.blit(text_s,(300,250))
         self.overlay_button.draw(screen)
         self.backpack_button.draw(screen)
         self.leading_system_button.draw(screen)
@@ -404,9 +458,17 @@ class GameScene(Scene):
                 if player["map"] == self.game_manager.current_map.path_name:
                     cam = camera
                     pos = cam.transform_position_as_position(Position(player["x"], player["y"]))
+                    
                     self.sprite_online.position=pos
+                    self.sprite_online.animation.moving=player["moving"]
+                    
                     self.sprite_online.animation.update_pos(pos)
+                    print(self.sprite_online.animation.moving)
                     self.sprite_online.draw(screen,None)
+        # try:
+            #     self._draw_chat_bubbles(...)
+            # except Exception:
+            #     pass
         if self.navigating:
             if len(self.navigation_path)==0:
                 self.navigating=False
@@ -415,14 +477,10 @@ class GameScene(Scene):
                 py = tile[1]*GameSettings.TILE_SIZE+GameSettings.TILE_SIZE/2
                 if abs(px - self.game_manager.player.position.x) < GameSettings.TILE_SIZE and abs(py - self.game_manager.player.position.y) < GameSettings.TILE_SIZE:
                         self.navigation_path.remove(tile)
-                        print("remove")
                         break
             for tile in self.navigation_path:
-            
                 px = tile[0]*GameSettings.TILE_SIZE+GameSettings.TILE_SIZE/2
                 py = tile[1]*GameSettings.TILE_SIZE+GameSettings.TILE_SIZE/2
-                
-                
                 walk=(0,0)
                 if self.navigation_path.index(tile)+1<len(self.navigation_path):
                     walk=(self.navigation_path[self.navigation_path.index(tile)+1][0]-tile[0],self.navigation_path[self.navigation_path.index(tile)+1][1]-tile[1])
@@ -436,5 +494,85 @@ class GameScene(Scene):
                     d="up"
                 points=self.draw_triangle_prepare(px-camera.x, py-camera.y,d)
                 pg.draw.polygon(screen,(255,0,0),points)
+    def _draw_chat_bubbles(self, screen: pg.Surface, camera: PositionCamera) -> None:
+        
+        # if not self.online_manager:
+        #     return
+        # REMOVE EXPIRED BUBBLES
+        # now = time.monotonic()
+        # expired = [pid for pid, (_, ts) in self._chat_bubbles.items() if ts <= now]
+        # for pid in expired:
+        #     self._chat_bubbles.____(..., ...)
+        # if not self._chat_bubbles:
+        #     return
+
+        # DRAW LOCAL PLAYER'S BUBBLE
+        # local_pid = self.____
+        # if self.game_manager.player and local_pid in self._chat_bubbles:
+        #     text, _ = self._chat_bubbles[...]
+        #     self._draw_bubble_for_pos(..., ..., ..., ..., ...)
+
+        # DRAW OTHER PLAYERS' BUBBLES
+        # for pid, (text, _) in self._chat_bubbles.items():
+        #     if pid == local_pid:
+        #         continue
+        #     pos_xy = self._online_last_pos.____(..., ...)
+        #     if not pos_xy:
+        #         continue
+        #     px, py = pos_xy
+        #     self._draw_bubble_for_pos(..., ..., ..., ..., ...)
+
+        pass
+        """
+        DRAWING CHAT BUBBLES:
+        - When a player sends a chat message, the message should briefly appear above
+        that player's character in the world, similar to speech bubbles in RPGs.
+        - Each bubble should last only a few seconds before fading or disappearing.
+        - Only players currently visible on the map should show bubbles.
+
+        What you need to think about:
+            ------------------------------
+            1. **Which players currently have messages?**
+            You will have a small structure mapping player IDs to the text they sent
+            and the time the bubble should disappear.
+
+            2. **How do you know where to place the bubble?**
+            The bubble belongs above the player's *current position in the world*.
+            The game already tracks each player’s world-space location.
+            Convert that into screen-space and draw the bubble there.
+
+            3. **How should bubbles look?**
+            You decide. The visual style is up to you:
+            - A rounded rectangle, or a simple box.
+            - Optional border.
+            - A small triangle pointing toward the character's head.
+            - Enough padding around the text so it looks readable.
+
+            4. **How do bubbles disappear?**
+            Compare the current time to the stored expiration timestamp.
+            Remove any bubbles that have expired.
+
+            5. **In what order should bubbles be drawn?**
+            Draw them *after* world objects but *before* UI overlays.
+
+        Reminder:
+        - For the local player, you can use the self.game_manager.player.position to get the player's position
+        - For other players, maybe you can find some way to store other player's last position?
+        - For each player with a message, maybe you can call a helper to actually draw a single bubble?
+        """
+
+    def _draw_chat_bubble_for_pos(self, screen: pg.Surface, camera: PositionCamera, world_pos: Position, text: str, font: pg.font.Font):
+        pass
+    """
+    Steps:
+        ------------------
+        1. Convert a player’s world position into a location on the screen.
+        (Use the camera system provided by the game engine.)
+
+        2. Decide where "above the player" is.
+        Typically a little above the sprite’s head.
+
+        3. Measure the rendered text to determine bubble size.
+        Add padding around the text.
+    """
                 
-                #pg.draw.circle(screen, (255, 0, 0), (px - camera.x, py - camera.y), 5)
