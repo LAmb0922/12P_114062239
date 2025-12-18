@@ -69,20 +69,21 @@ class OnlineManager:
         """Get list of players"""
         with self._lock:
             return list(self.list_players)
-    def update(self, x: float, y: float, map_name: str,moving:bool) -> bool:
+    def update(self, x: float, y: float, map_name: str,moving:bool,direction: str) -> bool:
         """Queue position update (no dir / moving)."""
         if self.player_id == -1:
             return False
         try:
             # HINT: This part might be helpful for direction change
             # Maybe you can add other parameters?
-            
+            print(direction)
             self._update_queue.put_nowait({
                 "x": x,
                 "y": y,
                 "map": map_name,
                 
-                "moving":moving
+                "moving":moving,
+                "direction":direction
             })
             
             return True
@@ -201,7 +202,8 @@ class OnlineManager:
                                 "y": float(player_data.get("y", 0)),
                                 "map": str(player_data.get("map", "")),
                                 
-                                "moving":player_data.get("moving","")
+                                "moving":player_data.get("moving",""),
+                                "direction":player_data.get("direction","")
                             })
                     self.list_players = filtered
 
@@ -249,7 +251,8 @@ class OnlineManager:
                             "x": latest_update.get("x"),
                             "y": latest_update.get("y"),
                             "map": latest_update.get("map"),
-                            "moving":latest_update.get("moving")
+                            "moving":latest_update.get("moving"),
+                            "direction": latest_update.get("direction")
                         }
                         await websocket.send(json.dumps(message))
                         last_update = now

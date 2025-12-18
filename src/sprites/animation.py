@@ -26,7 +26,7 @@ class Animation(Sprite):
         self.moving=False
         if (len(rows) <= 0 or n_keyframes <= 0):
             Logger.error("Invalid number of rows")
-        
+        self.direction="down"
         self.animations = {}
         for r, name in enumerate(rows):
             anim : list[pg.Surface] = []
@@ -63,3 +63,5 @@ class Animation(Sprite):
             screen.blit(frames[idx], self.rect)
     def update_pos(self, pos):
         return super().update_pos(pos)
+    def update_direction(self,direction):
+        self.direction=direction

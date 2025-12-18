@@ -298,8 +298,10 @@ class GameScene(Scene):
                 self.game_manager.player.position.x, 
                 self.game_manager.player.position.y,
                 self.game_manager.current_map.path_name,
-                self.game_manager.player.animation.moving
+                self.game_manager.player.animation.moving,
+                self.game_manager.player.direction
             )
+        
         #print(self.game_manager.player.animation.moving)
         #print(self.game_manager.player.direction.name)
         self.overlay_button.update(dt)
@@ -462,8 +464,10 @@ class GameScene(Scene):
                     self.sprite_online.position=pos
                     self.sprite_online.animation.moving=player["moving"]
                     
+                    self.sprite_online.animation.switch(player.get("direction"))
+                    print(f"direction:{self.sprite_online.animation.direction}")
                     self.sprite_online.animation.update_pos(pos)
-                    print(self.sprite_online.animation.moving)
+                    
                     self.sprite_online.draw(screen,None)
         # try:
             #     self._draw_chat_bubbles(...)

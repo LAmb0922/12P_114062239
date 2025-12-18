@@ -20,13 +20,13 @@ class Entity_one:
         )
         
         self.position = Position(x, y)
-        self.direction = Direction.DOWN
+        self.direction = "down"
         self.animation.update_pos(self.position)
         self.game_manager = game_manager
     def update(self, dt: float) -> None:
         self.animation.update_pos(self.position)
         self.animation.update(dt)
-        
+        self.animation.update_direction(self.direction)
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:
         self.animation.draw(screen, camera)
         if GameSettings.DRAW_HITBOXES:
@@ -75,7 +75,7 @@ class Entity_two:
         )
         
         self.position = Position(x, y)
-        self.direction = Direction.DOWN
+        self.direction = "down"
         self.animation.update_pos(self.position)
         self.game_manager = game_manager
 
@@ -131,7 +131,7 @@ class Entity_three:
         )
         
         self.position = Position(x, y)
-        self.direction = Direction.DOWN
+        self.direction = "down"
         self.animation.update_pos(self.position)
         self.game_manager = game_manager
 
@@ -139,13 +139,13 @@ class Entity_three:
         self.animation.update_pos(self.position)
         self.animation.update(dt)
         if input_manager.key_pressed(pg.K_DOWN):
-            self.direction=Direction.DOWN
+            self.direction="down"
         elif input_manager.key_pressed(pg.K_RIGHT):
-            self.direction=Direction.RIGHT
+            self.direction="right"
         elif input_manager.key_pressed(pg.K_UP):
-            self.direction=Direction.UP
+            self.direction="up"
         elif input_manager.key_pressed(pg.K_LEFT):
-            self.direction=Direction.LEFT
+            self.direction="left"
     def draw(self, screen: pg.Surface, camera: PositionCamera) -> None:
         self.animation.draw(screen, camera)
         if GameSettings.DRAW_HITBOXES:
