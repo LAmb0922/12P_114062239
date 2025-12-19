@@ -102,6 +102,7 @@ class BattlePokemon(UIComponent):
             if self.chosen:
                 self.star.draw(screen)
             if self.defense:
+                
                 self.shield.draw(screen)
             if self.berserker:
                 if self.animate_timer<=4:

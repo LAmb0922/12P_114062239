@@ -43,6 +43,7 @@ class ChooseScene(Scene):
         self.play_super_animation=False
         self.super_animation_x=-500
         self.speed=0
+        self.leaving_text=False
         self.texing=False
         self.text_record=0
         self.text_timer=0
@@ -106,6 +107,7 @@ class ChooseScene(Scene):
     def new_sentence(self,new):
         self.new_text=new
         self.text_timer=0
+        self.should_change_line=False
         self.line1=""
         self.line2=""
     def reset_turn(self):
@@ -344,10 +346,13 @@ class ChooseScene(Scene):
                 self.angry_turtle.can_be_chosen=False
                 self.green_bug.can_be_chosen=False
     def team_defend(self):
+        print(self.nakama)
         for mons in self.nakama:
+            
             mons.defense=True
+            print(mons.name,mons.defense)
             self.new_sentence("\"Yes sir\", your pokemon said. They turn to defense mode")
-            self.reset_turn()
+        self.reset_turn()
     def choose_action(self):
         pass
     def go_to_choose_enemy(self):
@@ -379,7 +384,7 @@ class ChooseScene(Scene):
             self.player_action_record.append("use defense potion")
     def use_pokeball(self):
         if self.game_manager.bag._items_data[4]["count"]>1:
-            
+            self.game_manager.bag._items_data[4]["count"]-=1
             self.player_step="use pokeball"
             self.player_action_record.append("use pokeball")
             
@@ -429,12 +434,15 @@ class ChooseScene(Scene):
         if len(alive_enemy)>=2:
             self.attacker=random.choice(alive_enemy)
             self.player_step="enemy attack"
-        elif len(alive_enemy)==1:
+        elif len(alive_enemy)==1 and not alive_enemy[0].evolve:
             self.attacker=alive_enemy[0]# evolve
             self.player_step="evolve"
             self.new_sentence(f"Your rival sacrifice two corpses. Summo...I mean {self.attacker.name} evolve to super {self.attacker.name}. Recover hp and increase atk. Be careful.")
         elif len(alive_enemy)==0:
             self.player_step="you win" #you win
+        else:
+            self.attacker=random.choice(alive_enemy)
+            self.player_step="enemy attack"
     def choose_enemy(self):
         pass
     def actual_attack(self):
@@ -464,7 +472,7 @@ class ChooseScene(Scene):
         self.game_manager.save("./saves/game0.json")
     @override
     def update(self, dt: float) -> None:
-        
+        print(self.player_step)
         if input_manager.key_pressed(pg.K_ESCAPE):
             scene_manager.change_scene("game")
             return
@@ -500,6 +508,7 @@ class ChooseScene(Scene):
             alive_pokemon=[mons for mons in self.nakama if mons.hp!=0]
             if len(alive_pokemon)==0:
                 self.player_step="you lose"
+                
             self.use_ball_button.count=self.game_manager.bag._items_data[4]["count"]
             self.use_defense_potion_button.count=self.game_manager.bag._items_data[2]["count"]
             self.use_heal_potion_button.count=self.game_manager.bag._items_data[0]["count"]
@@ -554,6 +563,13 @@ class ChooseScene(Scene):
         elif self.stage=="battle":  #leaving
             if self.player_step=="you win" or self.player_step=="you lose":
                 self.times+=1
+                if not self.leaving_text:
+                    if self.player_step=="you lose":
+                        self.new_sentence(f"you lose. No one like you, including yourself.")
+                        self.leaving_text=True
+                    else:
+                        self.new_sentence("congratulations!!")
+                        self.leaving_text=True
                 if self.times>=300:
                     self.game_manager.bag._items_data[0]=self.use_heal_potion_button.count
                     self.game_manager.bag._items_data[1]=self.use_strength_potion_button.count
@@ -676,7 +692,7 @@ class ChooseScene(Scene):
                                         self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*1.5(berserker) damage.")
                                 else:
                                     if (self.attackeder.hp-damage)<=0:
-                                        self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk} damage. {self.attackeder} dies.")
+                                        self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk} damage. {self.attackeder.name} dies.")
                                     else:
                                         self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk} damage.")
                                 self.attackeder.hp-=damage
@@ -835,26 +851,20 @@ class ChooseScene(Scene):
                         if self.player_already_attack==False:
                             if (self.attackeder.attribute=="grass" and self.attacker.attribute=="fire") or (self.attackeder.attribute=="fire" and self.attacker.attribute=="water") or (self.attackeder.attribute=="water" and self.attacker.attribute=="grass"):#counter
                                 damage=self.attacker.atk*2
-                                if self.attackeder.berserker and (self.attackeder.defense or self.attackeder.defense_buff):
+                                if (self.attackeder.defense or self.attackeder.defense_buff):
                                     if self.attackeder.defense:
                                         damage=int(damage*1.5*0.5)
                                         if (self.attackeder.hp-damage)<=0:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)*1.5(berserker)*0.5(defense) damage. {self.attackeder.name} dies.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)*0.5(defense) damage. {self.attackeder.name} dies.")
                                         else:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)*1.5(berserker)*0.5(defense) damage.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)*0.5(defense) damage.")
                                     else:
                                         damage=int(damage*1.5)-self.attackeder.defense_buff
                                         if (self.attackeder.hp-damage)<=0:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)*1.5(berserker)-{self.attackeder.defense_buff}(defense potion) damage. {self.attackeder.name} dies.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)-{self.attackeder.defense_buff}(defense potion) damage. {self.attackeder.name} dies.")
                                         else:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)*1.5(berserker)-{self.attackeder.defense_buff}(defense potion) damage.")
-                                elif self.attackeder.berserker:
-                                    damage=int(damage*1.5)
-                                    if (self.attackeder.hp-damage)<=0:
-                                        
-                                        self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)*1.5(berserker) damage. {self.attackeder.name} dies.")
-                                    else:
-                                        self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)*1.5(berserker) damage.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*2(counter)-{self.attackeder.defense_buff}(defense potion) damage.")
+                                
                                 else:
                                     damage=damage*1
                                     if (self.attackeder.hp-damage)<=0:
@@ -865,26 +875,21 @@ class ChooseScene(Scene):
                                 self.player_already_attack=True
                             elif (self.attackeder.attribute=="fire" and self.attacker.attribute=="grass") or (self.attackeder.attribute=="grass" and self.attacker.attribute=="water") or (self.attackeder.attribute=="water" and self.attacker.attribute=="fire"):
                                 damage=self.attacker.atk*0.5
-                                if self.attackeder.berserker and (self.attackeder.defense or self.attackeder.defense_buff):
+                                if (self.attackeder.defense or self.attackeder.defense_buff):
                                     if self.attackeder.defense:
                                         damage=int(damage*1.5*0.5)
                                         if (self.attackeder.hp-damage)<=0:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)*1.5(berserker)*0.5(defense) damage. {self.attackeder.name} dies.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)*0.5(defense) damage. {self.attackeder.name} dies.")
                                         else:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)*1.5(berserker)*0.5(defense) damage.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)*0.5(defense) damage.")
 
                                     else:
                                         damage=int(damage*1.5)-self.attackeder.defense_buff
                                         if (self.attackeder.hp-damage)<=0:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)*1.5(berserker)-{self.attackeder.defense_buff}(defense potion) damage. {self.attackeder.name} dies.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)-{self.attackeder.defense_buff}(defense potion) damage. {self.attackeder.name} dies.")
                                         else:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)*1.5(berserker)-{self.attackeder.defense_buff}(defense potion) damage.")
-                                elif self.attackeder.berserker:
-                                    damage=int(damage*1.5)
-                                    if (self.attackeder.hp-damage)<=0:
-                                        self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)*1.5(berserker) damage. {self.attackeder.name} dies.")
-                                    else:
-                                        self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)*1.5(berserker) damage.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(countered)-{self.attackeder.defense_buff}(defense potion) damage.")
+                                
                                 else:
                                     damage=damage*1
                                     if (self.attackeder.hp-damage)<=0:
@@ -895,25 +900,19 @@ class ChooseScene(Scene):
                                 self.player_already_attack=True    
                             else:
                                 damage=self.attackeder.atk
-                                if self.attackeder.berserker and (self.attackeder.defense or self.attackeder.defense_buff):
+                                if (self.attackeder.defense or self.attackeder.defense_buff):
                                     if self.attackeder.defense:
                                         damage=int(damage*1.5*0.5)
                                         if (self.attackeder.hp-damage)<=0:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*1.5(berserker)*0.5(defense) damage. {self.attackeder.name} dies.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(defense) damage. {self.attackeder.name} dies.")
                                         else:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*1.5(berserker)*0.5(defense) damage.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*0.5(defense) damage.")
                                     else:
                                         damage=int(damage*1.5)-self.attackeder.defense_buff
                                         if (self.attackeder.hp-damage)<=0:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*1.5(berserker)-{self.attackeder.defense_buff}(defense potion) damage. {self.attackeder.name} dies.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}-{self.attackeder.defense_buff}(defense potion) damage. {self.attackeder.name} dies.")
                                         else:
-                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*1.5(berserker)-{self.attackeder.defense_buff}(defense potion) damage.")
-                                elif self.attackeder.berserker:
-                                    damage=int(damage*1.5)
-                                    if (self.attackeder.hp-damage)<=0:
-                                        self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*1.5(berserker) damage. {self.attackeder.name} dies.")
-                                    else:
-                                        self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}*1.5(berserker) damage.")
+                                            self.new_sentence(f"{self.attacker.name} attack {self.attackeder.name}, causing {self.attacker.atk}-{self.attackeder.defense_buff}(defense potion) damage.")
                                 else:
                                     damage=damage*1
                                     if (self.attackeder.hp-damage)<=0:
@@ -930,6 +929,7 @@ class ChooseScene(Scene):
                         self.mask.fill((255,255,255,255-255*(self.animate_timer/800)))
                         screen.blit(self.mask,(0,0))
                     else:
+                        #self.new_sentence(f"Your rival sacrifice two corpses. Summo...I mean {self.attacker.name} evolve to super {self.attacker.name}. Recover hp and increase atk. Be careful.")
                         self.reset_turn()
                         self.attacker.hp+=300
                         self.attacker.atk+=100
@@ -940,9 +940,14 @@ class ChooseScene(Scene):
             if self.text_timer<len(self.new_text):
                 if int(self.text_timer)==len(self.line1)+len(self.line2):
                     if not self.should_change_line:
-                        if font.render(self.line1+self.new_text[int(self.text_timer)],True,(255,255,255)).get_width()>1230:
+                        if font.render(self.line1+self.new_text[int(self.text_timer)],True,(255,255,255)).get_width()>1230 and self.new_text[int(self.text_timer)]==" ":
                             self.line2+=self.new_text[int(self.text_timer)]
                             self.should_change_line=True
+                        elif font.render(self.line1+self.new_text[int(self.text_timer)],True,(255,255,255)).get_width()>1230 and self.new_text[int(self.text_timer)]!=" ":
+                            self.should_change_line=True
+                            tup=tuple(self.line1.split())
+                            self.line1=str(self.line1[:len(tup[-1])*(-1)])
+                            self.line2=tup[-1]+self.new_text[int(self.text_timer)]
                         else:
                             self.line1+=self.new_text[int(self.text_timer)]
                     else:

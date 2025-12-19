@@ -9,7 +9,7 @@
           "destination": "gym.tmx"
         },
         {
-          "x": 53.5,
+          "x": 53.0,
           "y": 14,
           "destination": "riddle.tmx"
         }
@@ -85,8 +85,6 @@
           "y": 20,
           "destination": "map.tmx"
         }
-        
-        
       ],
       "player": {
         "x": 29.0,
@@ -98,66 +96,50 @@
   ],
   "current_map": "map.tmx",
   "player": {
-    "x": 24.15625,
-    "y": 30.4375
+    "x": 27.859375,
+    "y": 30.34375
   },
   "bag": {
     "monsters": [
       {
         "name": "grass lion",
-        "hp": 85,
-        "max_hp": 100,
+        "hp": 0,
+        "max_hp": 500,
         "level": 25,
         "sprite_path": "menu_sprites/menusprite1.png"
       },
       {
         "name": "ice deer",
-        "hp": 150,
-        "max_hp": 200,
+        "hp": 0,
+        "max_hp": 500,
         "level": 36,
         "sprite_path": "menu_sprites/menusprite2.png"
       },
       {
         "name": "fire bird",
-        "hp": 120,
-        "max_hp": 180,
+        "hp": 0,
+        "max_hp": 500,
         "level": 32,
         "sprite_path": "menu_sprites/menusprite3.png"
       },
       {
         "name": "ground rat",
-        "hp": 90,
-        "max_hp": 160,
-        "level": 30,
+        "hp": 500,
+        "max_hp": 500,
+        "level": 100,
         "sprite_path": "menu_sprites/menusprite4.png"
       }
     ],
     "items": [
-      {
-        "name": "Heal Potion",
-        "count": 6,
-        "sprite_path": "ingame_ui/potion.png"
-      },
-      {
-        "name": "Strength Potion",
-        "count": 7,
-        "sprite_path": "ingame_ui/potion.png"
-      },
-      {
-        "name": "Defense Potion",
-        "count": 0,
-        "sprite_path": "ingame_ui/potion.png"
-      },
+      6,
+      3,
+      0,
       {
         "name": "Coins",
         "count": 5,
         "sprite_path": "ingame_ui/coin.png"
       },
-      {
-        "name": "Pokeball",
-        "count": 17,
-        "sprite_path": "ingame_ui/ball.png"
-      }
+      17
     ]
   }
 }
