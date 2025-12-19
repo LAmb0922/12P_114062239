@@ -110,21 +110,21 @@
       },
       {
         "name": "ice deer",
-        "hp": 0,
+        "hp": 500,
         "max_hp": 500,
         "level": 36,
         "sprite_path": "menu_sprites/menusprite2.png"
       },
       {
         "name": "fire bird",
-        "hp": 0,
+        "hp": 500,
         "max_hp": 500,
         "level": 32,
         "sprite_path": "menu_sprites/menusprite3.png"
       },
       {
         "name": "ground rat",
-        "hp": 100,
+        "hp": 500,
         "max_hp": 500,
         "level": 100,
         "sprite_path": "menu_sprites/menusprite4.png"
