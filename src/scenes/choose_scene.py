@@ -346,11 +346,11 @@ class ChooseScene(Scene):
                 self.angry_turtle.can_be_chosen=False
                 self.green_bug.can_be_chosen=False
     def team_defend(self):
-        print(self.nakama)
+        
         for mons in self.nakama:
             
             mons.defense=True
-            print(mons.name,mons.defense)
+            
             self.new_sentence("\"Yes sir\", your pokemon said. They turn to defense mode")
         self.reset_turn()
     def choose_action(self):
@@ -472,7 +472,7 @@ class ChooseScene(Scene):
         self.game_manager.save("./saves/game0.json")
     @override
     def update(self, dt: float) -> None:
-        print(self.player_step)
+        
         if input_manager.key_pressed(pg.K_ESCAPE):
             scene_manager.change_scene("game")
             return

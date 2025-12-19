@@ -16,7 +16,7 @@ from src.entities.entity import Entity_one
 from src.maps.map import Map
 from collections import deque
 from src.interface.components import Button
-# from src.interface.components.chat_overlay import ChatOverlay
+from src.interface.components.chat_overlay import ChatOverlay
 class GameScene(Scene):
     game_manager: GameManager
     online_manager: OnlineManager | None
@@ -43,14 +43,18 @@ class GameScene(Scene):
         if GameSettings.IS_ONLINE:
             self.online_manager = OnlineManager()
             self.online_manager.start()
-            # self.chat_overlay = ChatOverlay(
-            #     send_callback=..., <- send chat method
-            #     get_messages=..., <- get chat messages method
-            # )
+            self.chat_overlay = ChatOverlay(
+                send_callback=self.online_manager.send_chat, #<- send chat method
+                get_messages=self.online_manager.get_recent_chat, #<- get chat messages method
+            )
+            self._chat_bubbles: dict[int, tuple[str, float]] = {}  
+            self._last_chat_id_seen: int = 0
+            self._online_last_pos: dict[int, tuple[float, float]] = {}  
+            
         else:
             self.online_manager = None
         self.sprite_online = Entity_one(self.game_manager.player.position.x,self.game_manager.player.position.y,self.game_manager)
-        #self.player_id=self.online_manager.player_id
+        self.player_id=self.online_manager.player_id
         px, py = GameSettings.SCREEN_WIDTH // 2, GameSettings.SCREEN_HEIGHT * 3 // 4
         self.overlay_button = Button(
             "UI/button_setting.png", "UI/button_setting_hover.png",
@@ -324,37 +328,38 @@ class GameScene(Scene):
         self.lead_to_riddle_end_button.update(dt)
         self.lead_to_gym_button.update(dt)
         self.lead_to_riddle_start_button.update(dt)
-        """
-        TODO: UPDATE CHAT OVERLAY:
+        
+        #TODO: UPDATE CHAT OVERLAY:
 
-        # if self._chat_overlay:
-        #     if _____.key_pressed(...):
-        #         self._chat_overlay.____
-        #     self._chat_overlay.update(____)
+        if self.chat_overlay:
+            if input_manager.key_pressed(pg.K_f):
+                self.chat_overlay.open()
+            self.chat_overlay.update(dt)
         # Update chat bubbles from recent messages
 
         # This part's for the chatting feature, we've made it for you.
-        # if self.online_manager:
-        #     try:
-        #         msgs = self.online_manager.get_recent_chat(50)
-        #         max_id = self._last_chat_id_seen
-        #         now = time.monotonic()
-        #         for m in msgs:
-        #             mid = int(m.get("id", 0))
-        #             if mid <= self._last_chat_id_seen:
-        #                 continue
-        #             sender = int(m.get("from", -1))
-        #             text = str(m.get("text", ""))
-        #             if sender >= 0 and text:
-        #                 self._chat_bubbles[sender] = (text, now + 5.0)
-        #             if mid > max_id:
-        #                 max_id = mid
-        #         self._last_chat_id_seen = max_id
-        #     except Exception:
-        #         pass
-        """
+        if self.online_manager:
+            try:
+                msgs = self.online_manager.get_recent_chat(50)
+                max_id = self._last_chat_id_seen
+                now = time.monotonic()
+                for m in msgs:
+                    mid = int(m.get("id", 0))
+                    if mid <= self._last_chat_id_seen:
+                        continue
+                    sender = int(m.get("from", -1))
+                    text = str(m.get("text", ""))
+                    if sender >= 0 and text:
+                        self._chat_bubbles[sender] = (text, now + 5.0)
+                    if mid > max_id:
+                        max_id = mid
+                self._last_chat_id_seen = max_id
+            except Exception:
+                pass
+        
     @override
     def draw(self, screen: pg.Surface):
+        print(self._chat_bubbles)
         if self.game_manager.player:
             '''
             [TODO HACKATHON 3]
@@ -392,8 +397,8 @@ class GameScene(Scene):
         px = int(self.game_manager.player.position.x/ map_w * 240)  +5.5
         py = int(self.game_manager.player.position.y/ map_h * 135) +5.5
         pg.draw.circle(screen, (0, 0, 0), (px, py), 3)
-        # if self._chat_overlay:
-        #     self._chat_overlay.draw(screen)
+        if self.chat_overlay:
+            self.chat_overlay.draw(screen)
         if self.setting_overlay_clicked:
             font = pg.font.Font("assets/fonts/Minecraft.ttf", 24)
             text_v=font.render(f"Volume", True, (255,255,255))
@@ -460,19 +465,20 @@ class GameScene(Scene):
                 if player["map"] == self.game_manager.current_map.path_name:
                     cam = camera
                     pos = cam.transform_position_as_position(Position(player["x"], player["y"]))
-                    
+                    self._online_last_pos[player["id"]] = (player["x"], player["y"])
                     self.sprite_online.position=pos
                     self.sprite_online.animation.moving=player["moving"]
                     
                     self.sprite_online.animation.switch(player.get("direction"))
-                    print(f"direction:{self.sprite_online.animation.direction}")
+                    
                     self.sprite_online.animation.update_pos(pos)
                     
                     self.sprite_online.draw(screen,None)
-        # try:
-            #     self._draw_chat_bubbles(...)
-            # except Exception:
-            #     pass
+        try:
+            self._draw_chat_bubbles(screen,camera)
+            
+        except Exception:
+            print("bubble didnt draw")
         if self.navigating:
             if len(self.navigation_path)==0:
                 self.navigating=False
@@ -500,31 +506,34 @@ class GameScene(Scene):
                 pg.draw.polygon(screen,(255,0,0),points)
     def _draw_chat_bubbles(self, screen: pg.Surface, camera: PositionCamera) -> None:
         
-        # if not self.online_manager:
-        #     return
+        if not self.online_manager:
+            return
         # REMOVE EXPIRED BUBBLES
-        # now = time.monotonic()
-        # expired = [pid for pid, (_, ts) in self._chat_bubbles.items() if ts <= now]
-        # for pid in expired:
-        #     self._chat_bubbles.____(..., ...)
-        # if not self._chat_bubbles:
-        #     return
+        now = time.monotonic()
+        expired = [pid for pid, (_, ts) in self._chat_bubbles.items() if ts <= now]
+        for pid in expired:
+            self._chat_bubbles.pop(pid,"")
+        if not self._chat_bubbles:
+            return
 
         # DRAW LOCAL PLAYER'S BUBBLE
-        # local_pid = self.____
-        # if self.game_manager.player and local_pid in self._chat_bubbles:
-        #     text, _ = self._chat_bubbles[...]
-        #     self._draw_bubble_for_pos(..., ..., ..., ..., ...)
+        local_pid = self.player_id
+        if self.game_manager.player and local_pid in self._chat_bubbles:
+            text, _ = self._chat_bubbles[local_pid]
+            
+            print("drawing")
+            self._draw_chat_bubble_for_pos(screen, camera,self.game_manager.player.position, text, self.chat_overlay._font_msg)
 
         # DRAW OTHER PLAYERS' BUBBLES
-        # for pid, (text, _) in self._chat_bubbles.items():
-        #     if pid == local_pid:
-        #         continue
-        #     pos_xy = self._online_last_pos.____(..., ...)
-        #     if not pos_xy:
-        #         continue
-        #     px, py = pos_xy
-        #     self._draw_bubble_for_pos(..., ..., ..., ..., ...)
+        for pid, (text, _) in self._chat_bubbles.items():
+            if pid == local_pid:
+                continue
+            pos_xy = self._online_last_pos.get(pid, "")
+            if not pos_xy:
+                continue
+            px, py = pos_xy
+            print("drawing")
+            self._draw_chat_bubble_for_pos(screen, camera, Position(px,py), text, self.chat_overlay._font_msg)
 
         pass
         """
@@ -566,7 +575,18 @@ class GameScene(Scene):
         """
 
     def _draw_chat_bubble_for_pos(self, screen: pg.Surface, camera: PositionCamera, world_pos: Position, text: str, font: pg.font.Font):
-        pass
+        text_surf = font.render(text, True, (255, 255, 255))
+        pos = camera.transform_position_as_position(world_pos)
+        bubble_w = text_surf.get_width()+6*2
+        bubble_h = text_surf.get_height()+4*2
+        bubble_x = pos.x
+        bubble_y = pos.y
+        bubble= pg.Surface((bubble_w, bubble_h), pg.SRCALPHA)
+        bubble.fill((0, 0, 0, 120))  # black with transparency
+        screen.blit(bubble, (bubble_x - bubble_w // 2, bubble_y - bubble_h // 2))
+        screen.blit(text_surf,(bubble_x - text_surf.get_width() // 2, bubble_y - text_surf.get_height() // 2))
+        
+    
     """
     Steps:
         ------------------

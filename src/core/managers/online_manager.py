@@ -76,7 +76,7 @@ class OnlineManager:
         try:
             # HINT: This part might be helpful for direction change
             # Maybe you can add other parameters?
-            print(direction)
+            
             self._update_queue.put_nowait({
                 "x": x,
                 "y": y,
