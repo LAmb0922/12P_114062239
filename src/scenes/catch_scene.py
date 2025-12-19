@@ -62,7 +62,7 @@ class CatchScene(Scene):
             self.leaving_timer-=dt
         if self.leaving_timer<0:
             scene_manager.change_scene("game")
-        print(self.leaving_timer)
+        
             
         
         

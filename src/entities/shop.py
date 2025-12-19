@@ -58,12 +58,14 @@ class Shop(Entity_two):
             self.close=False
         else:
             self.close=True
+        
     @override
     def update(self, dt: float) -> None:
         self._movement.update(self, dt)
         self._has_los_to_player()
-        if self.detected and input_manager.key_pressed(pygame.K_SPACE):
+        if self.detected and input_manager.key_released(pygame.K_SPACE):
             self.shop_open_close()
+            
         self.animation.update_pos(self.position)
 
     @override

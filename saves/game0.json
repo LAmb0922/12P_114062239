@@ -9,14 +9,14 @@
           "destination": "gym.tmx"
         },
         {
-          "x": 53.0,
+          "x": 54.0,
           "y": 14,
           "destination": "riddle.tmx"
         }
       ],
       "player": {
-        "x": 24.0,
-        "y": 25.0
+        "x": 51.0,
+        "y": 16.0
       },
       "enemy_trainers": [
         {
@@ -88,7 +88,7 @@
       ],
       "player": {
         "x": 29.0,
-        "y": 18.0
+        "y": 19.0
       },
       "enemy_trainers": [],
       "shop": []
@@ -96,14 +96,14 @@
   ],
   "current_map": "map.tmx",
   "player": {
-    "x": 27.859375,
-    "y": 30.34375
+    "x": 51.78125,
+    "y": 16.0625
   },
   "bag": {
     "monsters": [
       {
         "name": "grass lion",
-        "hp": 0,
+        "hp": 500,
         "max_hp": 500,
         "level": 25,
         "sprite_path": "menu_sprites/menusprite1.png"
@@ -124,22 +124,38 @@
       },
       {
         "name": "ground rat",
-        "hp": 500,
+        "hp": 100,
         "max_hp": 500,
         "level": 100,
         "sprite_path": "menu_sprites/menusprite4.png"
       }
     ],
     "items": [
-      6,
-      3,
-      0,
+      {
+        "name": "Heal Potion",
+        "count": 6,
+        "sprite_path": "ingame_ui/potion.png"
+      },
+      {
+        "name": "Strength Potion",
+        "count": 7,
+        "sprite_path": "ingame_ui/potion.png"
+      },
+      {
+        "name": "Defense Potion",
+        "count": 0,
+        "sprite_path": "ingame_ui/potion.png"
+      },
       {
         "name": "Coins",
-        "count": 5,
+        "count": 110,
         "sprite_path": "ingame_ui/coin.png"
       },
-      17
+      {
+        "name": "Pokeball",
+        "count": 16,
+        "sprite_path": "ingame_ui/ball.png"
+      }
     ]
   }
 }

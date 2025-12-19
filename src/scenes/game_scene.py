@@ -50,11 +50,12 @@ class GameScene(Scene):
             self._chat_bubbles: dict[int, tuple[str, float]] = {}  
             self._last_chat_id_seen: int = 0
             self._online_last_pos: dict[int, tuple[float, float]] = {}  
-            
+            self.player_id=self.online_manager.player_id
         else:
             self.online_manager = None
+            self.chat_overlay=False
         self.sprite_online = Entity_one(self.game_manager.player.position.x,self.game_manager.player.position.y,self.game_manager)
-        self.player_id=self.online_manager.player_id
+        
         px, py = GameSettings.SCREEN_WIDTH // 2, GameSettings.SCREEN_HEIGHT * 3 // 4
         self.overlay_button = Button(
             "UI/button_setting.png", "UI/button_setting_hover.png",
@@ -140,9 +141,9 @@ class GameScene(Scene):
             self.navigating=False
         else:
             self.navigating=True
-        player_tile = (
-        self.game_manager.player.position.x // GameSettings.TILE_SIZE,
-        self.game_manager.player.position.y // GameSettings.TILE_SIZE)
+        player_tile=(
+        self.game_manager.player.position.x//GameSettings.TILE_SIZE,
+        self.game_manager.player.position.y//GameSettings.TILE_SIZE)
         self.navigation_path = self.bfs_path(player_tile,(29,18),self.game_manager.current_map)
     def go_to_gym(self):
         self.leading_system_clicked=False
@@ -150,9 +151,9 @@ class GameScene(Scene):
             self.navigating=False
         else:
             self.navigating=True
-        player_tile = (
-        self.game_manager.player.position.x // GameSettings.TILE_SIZE,
-        self.game_manager.player.position.y // GameSettings.TILE_SIZE)
+        player_tile=(
+        self.game_manager.player.position.x//GameSettings.TILE_SIZE,
+        self.game_manager.player.position.y//GameSettings.TILE_SIZE)
         self.navigation_path = self.bfs_path(player_tile,(24,25),self.game_manager.current_map)
     def go_to_end(self):
         self.leading_system_clicked=False
@@ -160,39 +161,39 @@ class GameScene(Scene):
             self.navigating=False
         else:
             self.navigating=True
-        player_tile = (
-        self.game_manager.player.position.x // GameSettings.TILE_SIZE,
-        self.game_manager.player.position.y // GameSettings.TILE_SIZE)
+        player_tile=(
+        self.game_manager.player.position.x//GameSettings.TILE_SIZE,
+        self.game_manager.player.position.y//GameSettings.TILE_SIZE)
         self.navigation_path = self.bfs_path(player_tile,(2,6),self.game_manager.current_map)
     def get_walkable_road(self,x, y, game_map:Map):
-        neighbors = []
-        directions = [(0,1), (1,0), (0,-1), (-1,0)]  # down, right, up, left
+        neighbors=[]
+        directions=[(0,1), (1,0), (0,-1), (-1,0)]  # down, right, up, left
         for dx, dy in directions:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < game_map.tmxdata.width and 0 <= ny <  game_map.tmxdata.height:
-                rect = pg.Rect(nx*GameSettings.TILE_SIZE,ny*GameSettings.TILE_SIZE, GameSettings.TILE_SIZE, GameSettings.TILE_SIZE)
+            nx, ny=x + dx,y + dy
+            if 0<=nx<game_map.tmxdata.width and 0<= ny<game_map.tmxdata.height:
+                rect=pg.Rect(nx*GameSettings.TILE_SIZE,ny*GameSettings.TILE_SIZE,GameSettings.TILE_SIZE,GameSettings.TILE_SIZE)
                 if not game_map.check_collision(rect):  # implement is_blocked for your map
                     neighbors.append((nx, ny))
         return neighbors
     
 
     def bfs_path(self,start, goal, game_map):
-        queue = deque([start])
-        visited = set()
+        queue=deque([start])
+        visited=set()
         visited.add(start)
-        parent = {start: None}
+        parent={start: None}
         while queue:
-            current = queue.popleft()
-            if current == goal:
+            current=queue.popleft()
+            if current==goal:
                 break
-            neighbors= self.get_walkable_road(current[0], current[1], game_map)
+            neighbors=self.get_walkable_road(current[0],current[1],game_map)
             for neighbor in neighbors:
                 if neighbor not in visited:
                     visited.add(neighbor)
                     parent[neighbor] = current
                     queue.append(neighbor)
-        path = []
-        current = goal
+        path=[]
+        current=goal
         while current and current in parent:
             path.append(current)
             current = parent[current]
@@ -250,18 +251,19 @@ class GameScene(Scene):
             self.leading_system_clicked=0 
     def draw_triangle_prepare(self,x, y,direction: str):
         size=12
-        if direction == "up":
-            points = [(x,y-1.5*size),(x-size, y+size),(x+size,y+size)]
-        elif direction == "down":
-            points = [(x,y+1.5*size),(x-size,y-size),(x+size,y-size)]
-        elif direction == "left":
-            points = [(x-1.5*size,y),(x+size,y-size),(x+size,y+size)]
-        elif direction == "right":
-            points = [(x+1.5*size,y),(x-size,y-size),(x-size,y+size)]
+        if direction=="up":
+            points=[(x,y-1.5*size),(x-size, y+size),(x+size,y+size)]
+        elif direction=="down":
+            points=[(x,y+1.5*size),(x-size,y-size),(x+size,y-size)]
+        elif direction=="left":
+            points=[(x-1.5*size,y),(x+size,y-size),(x+size,y+size)]
+        elif direction=="right":
+            points=[(x+1.5*size,y),(x-size,y-size),(x-size,y+size)]
         return points
     @override
     def enter(self) -> None:
         sound_manager.play_bgm("RBY 103 Pallet Town.ogg")
+        #self.game_manager = GameManager.load("saves/game0.json")
         self.game_manager.current_map.create_minimap(240, 135)
         if self.online_manager:
             self.online_manager.start()
@@ -290,6 +292,8 @@ class GameScene(Scene):
         if input_manager.key_pressed(pg.K_ESCAPE):
             for shop in self.game_manager.current_shop:
                 shop.close = True
+                
+                pass
         
         self.game_manager.bag.update(dt)
         if  pg.mouse.get_pressed()[0]==0:     #slider dragging and change volume
@@ -359,7 +363,6 @@ class GameScene(Scene):
         
     @override
     def draw(self, screen: pg.Surface):
-        print(self._chat_bubbles)
         if self.game_manager.player:
             '''
             [TODO HACKATHON 3]
@@ -370,14 +373,14 @@ class GameScene(Scene):
             camera = self.game_manager.player.camera
             '''
             
-            camera = PositionCamera(16 * GameSettings.TILE_SIZE, 30 * GameSettings.TILE_SIZE)
+            camera = PositionCamera(16*GameSettings.TILE_SIZE,30*GameSettings.TILE_SIZE)
             
             camera.x=self.game_manager.player.position.x-int(0.5*screen.get_width())
             camera.y=self.game_manager.player.position.y-int(0.5*screen.get_height())
-            camera.x = max(0, min(camera.x, 64*64 - screen.get_width()))
-            camera.y = max(0, min(camera.y, 64*64 - screen.get_height()))
-            self.game_manager.current_map.draw(screen, camera)
-            self.game_manager.player.draw(screen, camera)
+            camera.x = max(0,min(camera.x,64*64-screen.get_width()))
+            camera.y = max(0,min(camera.y,64*64-screen.get_height()))
+            self.game_manager.current_map.draw(screen,camera)
+            self.game_manager.player.draw(screen,camera)
         else:
             camera = PositionCamera(0, 0)
             self.game_manager.current_map.draw(screen, camera)
@@ -387,9 +390,6 @@ class GameScene(Scene):
             shop.draw(screen,camera)
 
         
-        
-        
-                    
         
         self.game_manager.current_map.draw_minimap(screen, 0, 0)
         map_w = self.game_manager.current_map.tmxdata.width * GameSettings.TILE_SIZE
@@ -414,10 +414,12 @@ class GameScene(Scene):
             self.mute_switch.draw(screen)
         
         elif self.backpack_overlay_clicked:
-            
+            font = pg.font.Font("assets/fonts/Minecraft.ttf", 32)
+            text_g=font.render(f"Load the game to refresh after battle.",True,(255,255,255))
             _=screen.blit(self.mask,(0,0))
             self.board_button.draw(screen)
             self.game_manager.bag.draw(screen)
+            _=screen.blit(text_g,(300,450))
         elif self.leading_system_clicked:   ### make the navigate system
             font = pg.font.Font("assets/fonts/Minecraft.ttf", 24)
             self.board_button.draw(screen)
@@ -459,7 +461,7 @@ class GameScene(Scene):
         if self.online_manager and self.game_manager.player:
             
             list_online = self.online_manager.get_list_players()
-            print(list_online)
+            #print(list_online)
 
             for player in list_online:
                 if player["map"] == self.game_manager.current_map.path_name:
@@ -478,7 +480,7 @@ class GameScene(Scene):
             self._draw_chat_bubbles(screen,camera)
             
         except Exception:
-            print("bubble didnt draw")
+            pass
         if self.navigating:
             if len(self.navigation_path)==0:
                 self.navigating=False
@@ -521,7 +523,7 @@ class GameScene(Scene):
         if self.game_manager.player and local_pid in self._chat_bubbles:
             text, _ = self._chat_bubbles[local_pid]
             
-            print("drawing")
+            
             self._draw_chat_bubble_for_pos(screen, camera,self.game_manager.player.position, text, self.chat_overlay._font_msg)
 
         # DRAW OTHER PLAYERS' BUBBLES
@@ -532,8 +534,8 @@ class GameScene(Scene):
             if not pos_xy:
                 continue
             px, py = pos_xy
-            print("drawing")
-            self._draw_chat_bubble_for_pos(screen, camera, Position(px,py), text, self.chat_overlay._font_msg)
+            
+            self._draw_chat_bubble_for_pos(screen,camera,Position(px,py),text,self.chat_overlay._font_msg)
 
         pass
         """
@@ -575,16 +577,16 @@ class GameScene(Scene):
         """
 
     def _draw_chat_bubble_for_pos(self, screen: pg.Surface, camera: PositionCamera, world_pos: Position, text: str, font: pg.font.Font):
-        text_surf = font.render(text, True, (255, 255, 255))
-        pos = camera.transform_position_as_position(world_pos)
-        bubble_w = text_surf.get_width()+6*2
-        bubble_h = text_surf.get_height()+4*2
-        bubble_x = pos.x
-        bubble_y = pos.y
-        bubble= pg.Surface((bubble_w, bubble_h), pg.SRCALPHA)
-        bubble.fill((0, 0, 0, 120))  # black with transparency
-        screen.blit(bubble, (bubble_x - bubble_w // 2, bubble_y - bubble_h // 2))
-        screen.blit(text_surf,(bubble_x - text_surf.get_width() // 2, bubble_y - text_surf.get_height() // 2))
+        text_surf=font.render(text,True,(255,255,255))
+        pos=camera.transform_position_as_position(world_pos)
+        bubble_w=text_surf.get_width()+6*2
+        bubble_h=text_surf.get_height()+4*2
+        bubble_x=pos.x
+        bubble_y=pos.y
+        bubble= pg.Surface((bubble_w,bubble_h),pg.SRCALPHA)
+        bubble.fill((0,0,0,120))  # black with transparency
+        screen.blit(bubble,(bubble_x-bubble_w//2,bubble_y-bubble_h//2))
+        screen.blit(text_surf,(bubble_x-text_surf.get_width()//2, bubble_y-text_surf.get_height()//2))
         
     
     """

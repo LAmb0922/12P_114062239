@@ -93,7 +93,7 @@ class BattleScene(Scene):
         if self.leaving_timer<=0 and self.win!=None:
             scene_manager.change_scene("game")
             
-        print(self.leaving_timer)
+        
         
         
 

@@ -571,10 +571,10 @@ class ChooseScene(Scene):
                         self.new_sentence("congratulations!!")
                         self.leaving_text=True
                 if self.times>=300:
-                    self.game_manager.bag._items_data[0]=self.use_heal_potion_button.count
-                    self.game_manager.bag._items_data[1]=self.use_strength_potion_button.count
-                    self.game_manager.bag._items_data[2]=self.use_defense_potion_button.count
-                    self.game_manager.bag._items_data[4]=self.use_ball_button.count
+                    self.game_manager.bag._items_data[0]["count"]=self.use_heal_potion_button.count
+                    self.game_manager.bag._items_data[1]["count"]=self.use_strength_potion_button.count
+                    self.game_manager.bag._items_data[2]["count"]=self.use_defense_potion_button.count
+                    self.game_manager.bag._items_data[4]["count"]=self.use_ball_button.count
                     self.game_manager.bag._monsters_data[0]["hp"]=self.battle_grass_lion.hp
                     self.game_manager.bag._monsters_data[1]["hp"]=self.battle_ice_deer.hp
                     self.game_manager.bag._monsters_data[2]["hp"]=self.battle_fire_bird.hp

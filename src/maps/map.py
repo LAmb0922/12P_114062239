@@ -70,7 +70,7 @@ class Map:
         Hint: Maybe there is an way to switch the map using something from src/core/managers/game_manager.py called switch_... 
         '''
         for tp in self.teleporters:
-            #print(tp.pos.x,tp.pos.y)
+            
             if tp.pos.x-50<=pos.x and pos.x<=tp.pos.x+50 and tp.pos.y-50<=pos.y and tp.pos.y+50>=pos.y:
                 self.spawn=Position(pos.x,pos.y)
                 return tp
